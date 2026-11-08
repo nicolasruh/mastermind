@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Mastermind · Mensch: Codebreaker</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="game.js" defer></script>
+  <script src="solver.js" defer></script>
+  <script src="explorer.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="page-header">
+    <a class="brand" href="./index.html" aria-label="Mastermind Startseite"><span class="brand-mark" aria-hidden="true">●●<br>●●</span> Mastermind</a>
+    <span id="mode-title" class="mode-title">Mensch: Codebreaker</span>
+  </header>
+  <main>
+    <section class="actors" aria-label="Akteure und Rollen im aktuellen Spiel">
+      <div class="actor human"><span class="actor-symbol" aria-hidden="true">M</span><div><strong>Mensch · du</strong><span id="human-role" class="role-name" title="Codebreaker: wählt Guesses, um den Code zu finden.">Codebreaker</span><small id="human-task">Guesses wählen · Code finden</small></div></div>
+      <div class="actor computer"><span class="actor-symbol" aria-hidden="true">C</span><div><strong>Computer</strong><span id="computer-role" class="role-name" title="Codemaker: legt den Code fest und vergibt Scores.">Codemaker</span><small id="computer-task">Code festlegen · Scores vergeben</small></div></div>
+    </section>
+    <div class="workspace">
+      <section class="board panel" aria-labelledby="board-title">
+        <div class="section-heading">
+          <h2 id="board-title">Spielbrett</h2>
+          <span class="badge" id="round-count">Guess 1 / 8</span>
+        </div>
+        <div class="flow-box">
+          <ol id="flow-steps" class="flow-steps" aria-label="Spielablauf"></ol>
+          <h3 id="next-step" tabindex="-1"></h3>
+          <p id="step-instruction"></p>
+        </div>
+        <div id="code-turn" class="turn-area"><div class="turn-heading"><span class="turn-actor"></span><strong>1. Code wählen</strong><span class="turn-status"></span></div>
+        <div class="secret-row"><span id="secret-label">Code</span><div id="secret-code" class="peg-row" aria-label="Der Code ist noch verdeckt"></div></div>
+        <form id="maker-setup" class="guess-form" novalidate hidden>
+          <label class="input-label" id="maker-label">Dein Code</label>
+          <div id="maker-inputs" class="guess-inputs" role="group" aria-labelledby="maker-label"></div>
+          <p id="maker-error" class="message error" role="alert"></p>
+          <button class="primary" type="submit">Code festlegen</button>
+        </form></div>
+        <div id="guess-turn" class="turn-area"><div class="turn-heading"><span class="turn-actor"></span><strong>2. Guess wählen</strong><span class="turn-status"></span></div>
+        <div id="computer-guess" class="peg-row" aria-label="Guess des Computers" hidden></div>
+        <form id="guess-form" class="guess-form" novalidate>
+          <label class="input-label" id="guess-label">Dein Guess</label>
+          <div id="guess-inputs" class="guess-inputs" role="group" aria-labelledby="guess-label"></div>
+          <p id="guess-error" class="message error" role="alert"></p>
+          <button class="primary" id="submit-guess" type="submit">Guess abgeben</button>
+        </form></div>
+        <div id="score-turn" class="turn-area"><div class="turn-heading"><span class="turn-actor"></span><strong>3. Score vergeben</strong><span class="turn-status"></span></div>
+        <div id="computer-score" class="feedback" aria-label="Score des Computers" hidden></div>
+        <form id="feedback-form" class="guess-form" novalidate hidden>
+          <div class="score-inputs">
+            <div id="score-pins" class="score-pins" role="group" aria-label="Score-Pins: leer, weiss, schwarz"></div>
+            <div id="manual-feedback" class="settings-grid">
+              <label>Schwarz<select id="black-feedback" aria-describedby="feedback-error"></select></label>
+              <label>Weiss<select id="white-feedback" aria-describedby="feedback-error"></select></label>
+            </div>
+          </div>
+          <p id="feedback-error" class="message error" role="alert"></p>
+          <div class="feedback-actions">
+            <button id="submit-feedback" class="primary" type="submit">Score bestätigen</button>
+            <button id="auto-feedback" class="secondary" type="button">Automatisch bewerten</button>
+          </div>
+          <button id="undo-feedback" class="secondary" type="button" hidden>Letzten Score zurücknehmen</button>
+        </form></div>
+        <p id="game-message" class="message" role="status" aria-live="polite"></p>
+        <hr class="board-divider">
+        <div class="history-heading"><span id="guess-actor">Guesses · Mensch / Codebreaker</span><span id="score-actor">Scores · Computer / Codemaker</span></div>
+        <ol id="history" class="history" aria-label="Bisherige Guesses und Scores"></ol>
+      </section>
+      <aside class="sidebar">
+        <section class="panel settings" aria-labelledby="settings-title">
+          <h2 id="settings-title">Konfiguration</h2>
+          <form id="settings-form" novalidate>
+            <div class="settings-grid mode-settings">
+              <label>Meine Rolle im neuen Spiel<select id="mode"><option value="breaker">Ich bin Codebreaker</option><option value="maker">Ich bin Codemaker</option></select></label>
+            </div>
+            <div class="settings-grid">
+              <label>Positionen<select id="positions" name="positions"><option value="2">2 Positionen</option><option value="3">3 Positionen</option><option value="4" selected>4 Positionen</option></select></label>
+              <label>Farben<select id="colors" name="colors"><option value="2">2 Farben</option><option value="3">3 Farben</option><option value="4">4 Farben</option><option value="5">5 Farben</option><option value="6" selected>6 Farben</option></select></label>
+            </div>
+            <label class="checkbox-label"><input id="repetitions" name="repetitions" type="checkbox" checked> Farbwiederholungen erlauben</label>
+            <p id="settings-message" class="settings-message" role="status" aria-live="polite"></p>
+            <button type="submit" class="secondary">Neues Spiel starten</button>
+            <p class="input-hint">Änderungen leeren das Spiel. Mit dem Startknopf neu beginnen.</p>
+          </form>
+          <div class="active-rules" id="active-rules"></div>
+        </section>
+        <section class="panel explorer-launch" aria-label="Knuth-Explorer">
+          <button id="show-explorer" class="secondary" type="button" aria-haspopup="dialog" aria-controls="algorithm-panel">Knuth-Explorer öffnen</button>
+        </section>
+        <section class="panel guide" aria-labelledby="guide-title">
+          <h2 id="guide-title">Score = (schwarz, weiss)</h2>
+          <div class="legend-item"><span class="feedback-pin black" aria-hidden="true"></span><div><strong>Schwarz</strong><p>Richtige Farbe an der richtigen Position.</p></div></div>
+          <div class="legend-item"><span class="feedback-pin white" aria-hidden="true"></span><div><strong>Weiss</strong><p>Richtige Farbe, aber an einer anderen Position.</p></div></div>
+          <p class="guide-note">Die kleinen Pins sind <strong>keinen einzelnen Positionen zugeordnet</strong>. Jede Farbe im Code wird höchstens einmal pro Vorkommen gezählt.</p>
+          <dl class="glossary">
+            <dt><abbr title="Geheime Farbfolge">Code</abbr></dt><dd>Geheime Farbfolge des Codemakers.</dd>
+            <dt><abbr title="Tatsächlich abgegebener Rateversuch">Guess</abbr></dt><dd>Farbfolge, die der Codebreaker tatsächlich abgibt.</dd>
+            <dt><abbr title="Hypothetischer Rateversuch für den Vergleich">Testguess</abbr></dt><dd>Farbfolge, die der Algorithmus vor einem Guess untersucht.</dd>
+            <dt><abbr title="Bewertung eines Guess">Score</abbr></dt><dd>Bewertung durch den Codemaker: (schwarz, weiss).</dd>
+          </dl>
+          <p id="solver-note" class="guide-note" hidden>Computer / Codebreaker verwendet Knuths Minimax-Strategie. Im Standardspiel (4 Positionen, 6 Farben, mit Wiederholungen) genügen höchstens 5 Guesses.</p>
+        </section>
+      </aside>
+    </div>
+    <dialog id="algorithm-panel" class="panel explorer" aria-labelledby="algorithm-title">
+      <div class="explorer-heading">
+        <h2 id="algorithm-title">Knuth-Explorer</h2>
+        <details id="algorithm-help" class="algorithm-help"><summary aria-label="Knuth-Pseudocode anzeigen">?</summary><pre>U = alle zulässigen Codes
+S = U; G = U
+Guess = 1122 im Standardspiel, sonst wähleGuess(S, G)
+
+wiederhole:
+  Guess abgeben; Score vom Codemaker erhalten
+  G = G ohne Guess
+  S = {Code in S: score(Code, Guess) = Score}
+  falls S leer: widersprüchlichen Score melden; abbrechen
+  falls Score = (Anzahl Positionen, 0): fertig
+  Guess = wähleGuess(S, G)
+
+wähleGuess(S, G):
+  falls |S| = 1: einziger Code aus S
+  für jeden Testguess in G:
+    gruppiere alle Codes aus S nach score(Code, Testguess)
+    minel[Testguess] = |S| - Grösse der grössten Gruppe
+  wähle Testguess mit grösstem minel
+  bei Gleichstand: Code in S bevorzugen, dann kleinster Code</pre></details>
+        <button id="close-explorer" class="secondary" type="button" autofocus>Schliessen</button>
+      </div>
+      <div id="current-pair" class="current-pair" aria-label="Guess und Score für diese Berechnung"></div>
+      <p id="explorer-intro" class="input-hint"></p>
+      <p id="explorer-status" class="message" role="status" aria-live="polite"></p>
+      <button id="explorer-retry" class="secondary" type="button" hidden>Analyse erneut berechnen</button>
+      <div id="explorer-content" hidden>
+        <ol id="explorer-steps" class="lesson-steps" aria-label="Knuths Algorithmusschritte"></ol>
+        <div class="lesson-instruction">
+          <div><h3 id="lesson-title"></h3><p id="lesson-instruction"></p></div>
+          <button id="automatic-step" class="secondary" type="button">Automatisch erledigen</button>
+          <form id="next-guess-form" class="next-guess-form" novalidate hidden>
+            <label class="explorer-label">Nächster Guess (Farbnummern)<input id="next-guess-code" inputmode="numeric" autocomplete="off" placeholder="1122" aria-describedby="lesson-message"></label>
+            <button id="check-next-guess" class="secondary" type="submit">Guess wählen</button>
+            <button id="apply-guess" class="primary" type="button" hidden>Guess ins Spielbrett übernehmen</button>
+          </form>
+        </div>
+        <p id="lesson-message" class="message" role="status" aria-live="polite"></p>
+        <section class="explorer-section" aria-labelledby="list-title">
+          <h3 id="list-title">Codeliste</h3>
+          <dl id="set-legend" class="set-legend" aria-label="Legende und aktuelle Mengengrössen"></dl>
+          <div class="code-table-scroll" tabindex="0" role="region" aria-label="Vollständige Codeliste, scrollbar">
+            <table class="code-table">
+              <thead><tr>
+                <th scope="col" data-column="code">Code <span class="sort-controls"></span><form id="code-search-form" class="code-jump" novalidate><input id="code-search" aria-label="Code suchen" inputmode="numeric" autocomplete="off" placeholder="1122"><button type="submit" aria-label="Zu Code springen">&#8614;</button></form></th>
+                <th scope="col" data-column="s">in S <span class="sort-controls"></span></th>
+                <th scope="col" data-column="g">in G <span class="sort-controls"></span></th>
+                <th scope="col" data-column="score">Score zum letzten Guess <span class="sort-controls"></span></th>
+                <th scope="col" data-column="minel">minel <span class="sort-controls"></span><small>Hover / Fokus: Score-Gruppen</small></th>
+              </tr></thead>
+              <tbody id="code-rows"></tbody>
+            </table>
+          </div>
+          <p class="row-legend"><span>Grün: in S</span><span>Hellgrau: früher aus S ausgeschlossen</span><span>Dunkelgrau: jetzt aus S ausgeschlossen</span><span>Orange: letzter Guess jetzt aus G ausgeschlossen</span></p>
+        </section>
+      </div>
+      <div id="minel-groups" class="minel-groups" role="tooltip" hidden></div>
+    </dialog>
+    <dialog id="feedback-dialog" class="panel feedback-dialog" aria-labelledby="feedback-title">
+      <h2 id="feedback-title">Hinweis</h2><p id="feedback-text"></p><button id="feedback-ok" class="secondary" type="button" autofocus>OK</button>
+    </dialog>
+  </main>
+</body>
+</html>
