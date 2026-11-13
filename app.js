@@ -152,57 +152,66 @@ function renderSecret() {
 function renderInputs(containerId) {
   const container = byId(containerId);
   container.replaceChildren();
-  container.style.setProperty("--positions", game.config.positions);
   for (let position = 0; position < game.config.positions; position++) {
-    const label = document.createElement("div");
-    label.className = "position-input";
+    const input = document.createElement("div");
+    input.className = "position-input";
+    input.setAttribute("role", "group");
+    input.setAttribute("aria-label", `Position ${position + 1}`);
     const title = document.createElement("span");
     title.textContent = `Position ${position + 1}`;
-    const select = document.createElement("select");
-    select.required = true;
-    select.setAttribute("aria-label", `Position ${position + 1}`);
-    const placeholder = document.createElement("option");
-    placeholder.value = "";
-    placeholder.textContent = "Farbe …";
-    placeholder.disabled = true;
-    placeholder.selected = true;
-    select.append(placeholder);
-    palette.slice(0, game.config.colors).forEach((color, index) => {
-      const option = document.createElement("option");
-      option.value = String(index + 1);
-      option.textContent = `${index + 1} · ${color.name}`;
-      select.append(option);
-    });
+    const wheel = document.createElement("div");
+    wheel.className = "color-wheel";
     const preview = document.createElement("button");
     preview.type = "button";
     preview.className = "peg input-preview hidden-peg";
     preview.textContent = "?";
-    preview.setAttribute("aria-label", `Farbe an Position ${position + 1} wechseln`);
+    preview.dataset.value = "";
+    preview.setAttribute("aria-label", `Position ${position + 1}: keine Farbe gewählt. Nächste Farbe wählen`);
     preview.title = "Klicken: nächste Farbe";
-    select.addEventListener("change", () => {
-      preview.classList.remove("hidden-peg");
-      preview.textContent = select.value;
-      preview.style.setProperty("--peg-color", palette[Number(select.value) - 1].color);
-      select.removeAttribute("aria-invalid");
-      renderFlow();
-    });
     preview.addEventListener("click", () => {
-      select.value = String(Number(select.value) % game.config.colors + 1);
-      select.dispatchEvent(new Event("change"));
+      setInputColor(input, Number(preview.dataset.value) % game.config.colors + 1);
     });
-    label.append(title, preview, select);
-    container.append(label);
+    wheel.append(preview);
+    palette.slice(0, game.config.colors).forEach((color, index) => {
+      const option = document.createElement("button");
+      const angle = -Math.PI / 2 + index * 2 * Math.PI / game.config.colors;
+      option.type = "button";
+      option.className = "color-option";
+      option.dataset.value = String(index + 1);
+      option.style.setProperty("--peg-color", color.color);
+      option.style.setProperty("--x", `${Math.cos(angle) * 34}px`);
+      option.style.setProperty("--y", `${Math.sin(angle) * 34}px`);
+      option.textContent = String(index + 1);
+      option.setAttribute("aria-label", `Position ${position + 1}: ${index + 1} ${color.name} wählen`);
+      option.setAttribute("aria-pressed", "false");
+      option.addEventListener("click", () => setInputColor(input, index + 1));
+      wheel.append(option);
+    });
+    input.append(title, wheel);
+    container.append(input);
   }
 }
 
+function setInputColor(input, color) {
+  const preview = input.querySelector(".input-preview");
+  preview.dataset.value = String(color);
+  preview.classList.remove("hidden-peg");
+  preview.textContent = String(color);
+  preview.style.setProperty("--peg-color", palette[color - 1].color);
+  preview.setAttribute("aria-label", `${input.getAttribute("aria-label")}: ${color} ${palette[color - 1].name}. Nächste Farbe wählen`);
+  input.querySelectorAll(".color-option").forEach(option => {
+    option.setAttribute("aria-pressed", String(Number(option.dataset.value) === color));
+  });
+}
+
 function readCode(containerId) {
-  const inputs = [...byId(containerId).querySelectorAll("select")];
-  const missing = inputs.find(select => !select.value);
+  const inputs = [...byId(containerId).querySelectorAll(".input-preview")];
+  const missing = inputs.find(input => !input.dataset.value);
   if (missing) {
     missing.focus();
     throw new Error("Wähle für jede Position eine Farbe.");
   }
-  const code = inputs.map(select => Number(select.value));
+  const code = inputs.map(input => Number(input.dataset.value));
   Mastermind.validateCode(code, game.config);
   return code;
 }
@@ -286,7 +295,7 @@ function renderAll() {
   }
   for (const id of ["guess-inputs", "maker-inputs"]) {
     const enabled = !configurationPending && (id === "guess-inputs" ? !maker && phase === "guess" : maker && phase === "code");
-    byId(id).querySelectorAll("select, button").forEach(input => { input.disabled = !enabled; });
+    byId(id).querySelectorAll("button").forEach(input => { input.disabled = !enabled; });
   }
   byId("submit-guess").disabled = configurationPending || phase !== "guess";
   byId("undo-feedback").hidden = configurationPending || !maker || !game.history.length;
@@ -498,9 +507,8 @@ const explorer = MastermindExplorer.createView({
   peg, notify: showFeedback,
   applyGuess(guess) {
     if (configurationPending || activeMode !== "breaker" || phase !== "guess") throw new Error("Dieser Guess kann nicht übernommen werden. Starte ein neues Spiel.");
-    byId("guess-inputs").querySelectorAll("select").forEach((select, index) => {
-      select.value = String(guess[index]);
-      select.dispatchEvent(new Event("change"));
+    byId("guess-inputs").querySelectorAll(".position-input").forEach((input, index) => {
+      setInputColor(input, guess[index]);
     });
     byId("guess-inputs").querySelector("button").focus();
   }

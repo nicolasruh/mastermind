@@ -152,7 +152,7 @@ wähleGuess(S, G):
           <div class="code-table-scroll" tabindex="0" role="region" aria-label="Vollständige Codeliste, scrollbar">
             <table class="code-table">
               <thead><tr>
-                <th scope="col" data-column="code">Code <span class="sort-controls"></span><form id="code-search-form" class="code-jump" novalidate><input id="code-search" aria-label="Code suchen" inputmode="numeric" autocomplete="off" placeholder="1122"><button type="submit" aria-label="Zu Code springen">&#8614;</button></form></th>
+                <th scope="col" data-column="code">Code <span class="sort-controls"></span><button id="open-code-search" class="code-search-trigger" type="button" aria-label="Code suchen" aria-haspopup="dialog" aria-controls="code-search-dialog" title="Code suchen"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10" cy="10" r="7"></circle><path d="m15 15 6 6"></path></svg></button></th>
                 <th scope="col" data-column="s">in S <span class="sort-controls"></span></th>
                 <th scope="col" data-column="g">in G <span class="sort-controls"></span></th>
                 <th scope="col" data-column="score">Score zum letzten Guess <span class="sort-controls"></span></th>
@@ -165,6 +165,17 @@ wähleGuess(S, G):
         </section>
       </div>
       <div id="minel-groups" class="minel-groups" role="tooltip" hidden></div>
+      <dialog id="code-search-dialog" class="panel code-search-dialog" aria-labelledby="code-search-title">
+        <h2 id="code-search-title">Code suchen</h2>
+        <form id="code-search-form" novalidate>
+          <label class="explorer-label" for="code-search">Farbnummern des gesuchten Codes</label>
+          <input id="code-search" inputmode="numeric" autocomplete="off" placeholder="1122">
+          <div class="code-search-actions">
+            <button class="primary" type="submit">Code suchen</button>
+            <button id="close-code-search" class="secondary" type="button">Abbrechen</button>
+          </div>
+        </form>
+      </dialog>
     </dialog>
     <dialog id="feedback-dialog" class="panel feedback-dialog" aria-labelledby="feedback-title">
       <h2 id="feedback-title">Hinweis</h2><p id="feedback-text"></p><button id="feedback-ok" class="secondary" type="button" autofocus>OK</button>

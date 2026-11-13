@@ -10,8 +10,8 @@ für Laptops. Keine Abhängigkeiten, kein Backend; funktioniert auch per `file:/
 - Begriffe durchgehend: Code, Guess, Testguess, Score.
 - M blau, C violett; drei Schritte: Code wählen, Guess wählen, Score vergeben.
   Computeraktionen werden ca. 500 ms visualisiert.
-- Farb-Pins durchklicken; Score-Pins: leer → weiss → schwarz → leer.
-  Dropdowns bleiben synchron. Mensch/Codebreaker hat acht Guesses.
+- Farben über Kreise um den Pin wählen oder Farb-Pins durchklicken;
+  Score-Pins: leer → weiss → schwarz → leer. Mensch/Codebreaker hat acht Guesses.
 - Konfigurationsänderungen leeren sofort das Spiel und stoppen Worker/Animationen.
   Ein neues Spiel beginnt erst per Startknopf.
 

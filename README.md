@@ -37,9 +37,10 @@ Anschliessend `http://127.0.0.1:8000` öffnen.
 - Ungültige Guesses zählen nicht. Als Mensch / Codebreaker erscheint der Code erst
   nach Spielende.
 - Einstellungen werden nur beim Start eines neuen Spiels übernommen.
-- Farbauswahl per beschrifteten Dropdowns, auch mit der Tastatur bedienbar.
-  Alternativ auf das Fragezeichen bzw. den Farb-Pin klicken: nächster Farbwert,
-  nach der letzten Farbe wieder die erste. Beide Eingaben bleiben synchron.
+- Für jede Position eine Farbe über die nummerierten Farbkreise wählen.
+  Alternativ auf den zunächst grauen Pin in der Mitte klicken: nächster Farbwert,
+  nach der letzten Farbe wieder die erste. Beide Eingaben sind auch mit der
+  Tastatur bedienbar.
 
 - Rückmeldungs-Pins stehen in einem Raster mit zwei Spalten (2×2 bei vier Pins).
 - Mensch / Codemaker startet mit verpflichtender Codeeingabe. Danach
@@ -107,8 +108,8 @@ Die hervorgehobene Tabellenlegende enthält Definitionen und aktuelle Grössen:
 
 Die Übersichten zeigen die Mengen immer relativ zu U, etwa `208/1296 Codes`.
 Die Tabelle enthält immer ganz U. Jede Spalte hat eigene Auf-/Ab-Sortierknöpfe,
-die Mengen bleiben unverändert. Die Suche im Code-Spaltenkopf springt zur
-gesuchten Zeile, ohne andere Codes auszublenden. Es gibt keine separate
+die Mengen bleiben unverändert. Die Lupe im Code-Spaltenkopf öffnet die Suche;
+sie springt zur gesuchten Zeile, ohne andere Codes auszublenden. Es gibt keine separate
 Toolbar, Beispielauswahl oder Seitenwechsel.
 Das Fragezeichen neben der Explorer-Überschrift zeigt den vollständigen
 Knuth-Pseudocode per Hover, Tastaturfokus oder Klick.

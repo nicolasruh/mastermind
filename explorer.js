@@ -237,6 +237,7 @@
     }
 
     function close() {
+      if (byId("code-search-dialog").open) byId("code-search-dialog").close();
       panel.close();
       byId("algorithm-help").open = false;
       document.body.classList.remove("explorer-open");
@@ -363,6 +364,7 @@
       sortDirection = "asc";
       searchIndex = null;
       byId("code-search").value = "";
+      byId("code-search").placeholder = config.repetitions ? "1".repeat(config.positions) : Array.from({ length: config.positions }, (_, index) => index + 1).join("");
       byId("next-guess-code").value = lesson.choice === null ? "" : data.codes[lesson.choice].join("");
       byId("next-guess-code").placeholder = config.repetitions ? "1".repeat(config.positions) : Array.from({ length: config.positions }, (_, index) => index + 1).join("");
       byId("next-guess-code").removeAttribute("aria-invalid");
@@ -570,7 +572,8 @@
     document.addEventListener("keydown", event => {
       if (!event.defaultPrevented && panel.open && event.key === "Escape") {
         event.preventDefault();
-        close();
+        if (byId("code-search-dialog").open) closeCodeSearch();
+        else close();
       }
     });
     panel.addEventListener("close", () => {
@@ -647,6 +650,16 @@
         th.querySelector(".sort-controls").append(button);
       }
     }
+    function closeCodeSearch() {
+      byId("code-search-dialog").close();
+      byId("open-code-search").focus({ preventScroll: true });
+    }
+
+    byId("open-code-search").addEventListener("click", () => {
+      byId("code-search-dialog").showModal();
+      byId("code-search").focus();
+    });
+    byId("close-code-search").addEventListener("click", closeCodeSearch);
     byId("code-search-form").addEventListener("submit", event => {
       event.preventDefault();
       try {
@@ -655,6 +668,7 @@
         root.Mastermind.validateCode([...input].map(Number), config);
         searchIndex = data.codes.findIndex(code => code.join("") === input);
         renderList();
+        closeCodeSearch();
         const row = byId("code-rows").querySelector(`tr[data-index="${searchIndex}"]`);
         const frame = row.closest(".code-table-scroll");
         frame.scrollTop += row.getBoundingClientRect().top - frame.getBoundingClientRect().top - frame.clientHeight / 2;
