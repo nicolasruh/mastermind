@@ -20,6 +20,7 @@ let turnTimer = null;
 let animationSerial = 0;
 let solverStarted = 0;
 let scorePins = [];
+let scoreTouched = false;
 let feedbackFocus = null;
 
 function peg(color, hidden = false) {
@@ -202,6 +203,17 @@ function setInputColor(input, color) {
   input.querySelectorAll(".color-option").forEach(option => {
     option.setAttribute("aria-pressed", String(Number(option.dataset.value) === color));
   });
+  updateSubmissionAppearance();
+}
+
+function updateSubmissionAppearance() {
+  const inputs = [...byId("guess-inputs").querySelectorAll(".input-preview")];
+  const colors = inputs.map(input => input.dataset.value);
+  const guessReady = !configurationPending && activeMode === "breaker" && phase === "guess" &&
+    colors.length === game.config.positions && colors.every(Boolean) &&
+    (game.config.repetitions || new Set(colors).size === colors.length);
+  byId("submit-guess").classList.toggle("awaiting-input", !guessReady);
+  byId("submit-feedback").classList.toggle("awaiting-input", configurationPending || activeMode !== "maker" || phase !== "score" || !scoreTouched);
 }
 
 function readCode(containerId) {
@@ -269,9 +281,11 @@ function renderScorePins(focusIndex) {
 }
 
 function resetScore() {
+  scoreTouched = false;
   scorePins = Array(game.config.positions).fill(0);
   for (const id of ["black-feedback", "white-feedback"]) byId(id).value = "0";
   renderScorePins();
+  updateSubmissionAppearance();
 }
 
 function renderAll() {
@@ -298,6 +312,7 @@ function renderAll() {
     byId(id).querySelectorAll("button").forEach(input => { input.disabled = !enabled; });
   }
   byId("submit-guess").disabled = configurationPending || phase !== "guess";
+  updateSubmissionAppearance();
   byId("undo-feedback").hidden = configurationPending || !maker || !game.history.length;
   byId("undo-feedback").disabled = makerBusy || phase === "error";
 }
@@ -463,7 +478,9 @@ byId("score-pins").addEventListener("click", event => {
   scorePins[index] = (scorePins[index] + 1) % 3;
   byId("black-feedback").value = String(scorePins.filter(state => state === 2).length);
   byId("white-feedback").value = String(scorePins.filter(state => state === 1).length);
+  scoreTouched = true;
   renderScorePins(index);
+  updateSubmissionAppearance();
 });
 for (const id of ["black-feedback", "white-feedback"]) byId(id).addEventListener("change", () => {
   try {
@@ -471,7 +488,9 @@ for (const id of ["black-feedback", "white-feedback"]) byId(id).addEventListener
     const white = Number(byId("white-feedback").value);
     Mastermind.validateFeedback({ black, white }, game.config.positions);
     scorePins = Array.from({ length: game.config.positions }, (_, index) => index < black ? 2 : index < black + white ? 1 : 0);
+    scoreTouched = true;
     renderScorePins();
+    updateSubmissionAppearance();
   } catch (error) { resetScore(); showFeedback(error.message); }
 });
 byId("undo-feedback").addEventListener("click", () => {

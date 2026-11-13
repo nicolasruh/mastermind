@@ -70,6 +70,7 @@ select { width: 100%; border: 1px solid #d7e0d8; background: #fafbf9; border-rad
 .primary, .secondary { border-radius: 9px; padding: 11px 17px; font-size: 13px; font-weight: 650; width: 100%; }
 .primary { border: 1px solid var(--accent); color: #fff; background: var(--accent); margin-top: 17px; display: flex; justify-content: space-between; }
 .primary:hover:not(:disabled) { background: #185347; }
+.primary.awaiting-input, .primary.awaiting-input:hover:not(:disabled) { border-color: #cadbce; color: #536e61; background: #edf2ed; }
 .secondary { border: 1px solid #cadbce; color: var(--accent); background: #f0f5ef; }
 .secondary:hover { background: #e3ede3; }
 .flow-box { padding: 14px; border-radius: 10px; background: #f0f6f2; margin-bottom: 16px; border: 1px solid #cfdfd3; }
@@ -179,7 +180,8 @@ abbr[title] { text-decoration: underline dotted; text-underline-offset: 3px; cur
 .explorer-label input { width: 100%; min-height: 40px; border: 1px solid #d7e0d8; border-radius: 8px; padding: 8px; background: #fafbf9; font: inherit; }
 .minel-groups { position: fixed; top: 0; left: 0; width: min(360px, calc(100vw - 32px)); max-height: calc(100dvh - 24px); overflow: auto; z-index: 3; padding: 15px; background: #fff; color: #253c3b; border: 1px solid #92a899; border-radius: 9px; box-shadow: 0 8px 35px #162e3c40; font-size: 12px; }
 .column-distribution { position: fixed; top: 0; left: 0; width: min(360px, calc(100vw - 32px)); max-height: min(60dvh, 500px); overflow: auto; z-index: 3; padding: 15px; background: #fff; color: #253c3b; border: 1px solid #92a899; border-radius: 9px; box-shadow: 0 8px 35px #162e3c40; font-size: 12px; }
-.distribution-label { min-height: 0; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; font-weight: inherit; text-align: left; text-decoration: underline dotted; text-underline-offset: 3px; }
+.distribution-label { display: inline-flex; align-items: center; gap: 5px; min-height: 0; padding: 0; border: 0; background: transparent; color: inherit; font: inherit; font-weight: inherit; text-align: left; text-decoration: underline dotted; text-underline-offset: 3px; }
+.distribution-label svg { flex-shrink: 0; color: #557667; }
 .distribution-bar { display: flex; height: 20px; overflow: hidden; border-radius: 4px; margin: 10px 0; background: #e9ede8; }
 .distribution-bar span { height: 100%; }
 .distribution-legend { display: grid; gap: 5px; }

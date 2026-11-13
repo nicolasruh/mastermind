@@ -41,7 +41,8 @@ Anschliessend `http://127.0.0.1:8000` öffnen.
   Alternativ auf den zunächst grauen Pin in der Mitte klicken: nächster Farbwert,
   nach der letzten Farbe wieder die erste. Beide Eingaben sind auch mit der
   Tastatur bedienbar. Nach einem abgegebenen Guess sind die Pins für den nächsten
-  Guess wieder leer.
+  Guess wieder leer. Der Abgabeknopf wird bei gültiger vollständiger Auswahl
+  kräftig eingefärbt.
 
 - Rückmeldungs-Pins stehen in einem Raster mit zwei Spalten (2×2 bei vier Pins).
 - Mensch / Codemaker startet mit verpflichtender Codeeingabe. Danach
@@ -50,7 +51,8 @@ Anschliessend `http://127.0.0.1:8000` öffnen.
   „Score bestätigen“ oder „Automatisch bewerten“ klicken. Die Score-Pins sind
   direkt anklickbar: leer → weiss → schwarz → leer. Die kompakten
   Schwarz-/Weiss-Dropdowns sind eine synchronisierte Alternative; leere Pins
-  bedeuten Score (0, 0).
+  bedeuten Score (0, 0). Der Bestätigungsknopf wird nach der Bearbeitung
+  kräftig eingefärbt; auch der anfänglich leere Score kann bestätigt werden.
 - Die Webseite kennt den festgelegten Code zum Bewerten und meldet falsches
   Zählen konkret. Der Solver erhält ausschliesslich die bisherigen Versuche
   und Scores, niemals den Geheimcode.
@@ -111,7 +113,7 @@ Die Übersichten zeigen die Mengen immer relativ zu U, etwa `208/1296 Codes`.
 Die Tabelle enthält immer ganz U. Die feste Spalte `idx` nummeriert die Codes
 ab 0. Jede Spalte hat eigene Auf-/Ab-Sortierknöpfe; beim Sortieren springt die
 Tabelle nach oben und die Mengen bleiben unverändert. Hover oder Tastaturfokus
-auf den Spaltennamen von S, G, Score und minel zeigt die aktuelle Verteilung
+auf den Spaltennamen oder dem Augensymbol bei S, G, Score und minel zeigt die aktuelle Verteilung
 über ganz U, einschliesslich noch nicht berechneter oder nicht anwendbarer Werte.
 Die Lupe im Code-Spaltenkopf öffnet die Suche;
 sie springt zur gesuchten Zeile, ohne andere Codes auszublenden. Es gibt keine separate
