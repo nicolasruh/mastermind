@@ -4,7 +4,7 @@ const test = require("node:test");
 const assert = require("node:assert/strict");
 const helpers = require("./game.js");
 const { createSolver } = require("./solver.js");
-const { filterSet, checkSet, partitionCodes, checkWorst, checkChoice, sortIndices, sortTable, createLesson } = require("./explorer.js");
+const { filterSet, checkSet, partitionCodes, checkWorst, checkChoice, sortIndices, sortTable, columnDistribution, createLesson } = require("./explorer.js");
 const config = { positions: 3, colors: 3, repetitions: true };
 
 test("Analysedaten zeigen exakte Kandidaten, Gruppen und vollständige Minimax-Werte", () => {
@@ -149,6 +149,8 @@ test("Spaltensortierung umfasst U, beide Richtungen und lässt unbekannte minel-
   const universe = details.codes.map((_, index) => index);
   assert.deepEqual(sortTable(details, "code", "asc", s, g, minels, scores), universe);
   assert.deepEqual(sortTable(details, "code", "desc", s, g, minels, scores), [...universe].reverse());
+  assert.deepEqual(sortTable(details, "idx", "asc", s, g, minels, scores), universe);
+  assert.deepEqual(sortTable(details, "idx", "desc", s, g, minels, scores), [...universe].reverse());
   for (const column of ["s", "g", "score", "minel"]) {
     for (const direction of ["asc", "desc"]) {
       const sorted = sortTable(details, column, direction, s, g, minels, scores);
@@ -161,6 +163,32 @@ test("Spaltensortierung umfasst U, beide Richtungen und lässt unbekannte minel-
     }
   }
   assert.throws(() => sortTable(details, "unknown", "asc", s, g, minels, scores));
+});
+
+test("Spaltenverteilungen zählen alle Codes einschliesslich fehlender und nicht anwendbarer Werte", () => {
+  const details = { codes: [[1], [2], [3], [4], [5]], recommendedIndex: 0 };
+  const s = new Set([0, 2]);
+  const g = new Set([0, 1, 2, 3]);
+  const minels = new Map([[0, 0], [1, 2], [2, 2]]);
+  const scores = [{ black: 1, white: 0 }, { black: 0, white: 1 }, { black: 1, white: 0 }, { black: 0, white: 0 }, { black: 0, white: 1 }];
+  assert.deepEqual(columnDistribution(details, "s", s, g, minels, scores), [
+    { label: "Codes in S", count: 2 }, { label: "Codes nicht in S", count: 3 }
+  ]);
+  assert.deepEqual(columnDistribution(details, "g", s, g, minels, scores), [
+    { label: "Codes in G", count: 4 }, { label: "Codes nicht in G", count: 1 }
+  ]);
+  assert.deepEqual(columnDistribution(details, "score", s, g, minels, scores), [
+    { label: "Score (0, 0)", count: 1 }, { label: "Score (0, 1)", count: 2 }, { label: "Score (1, 0)", count: 2 }
+  ]);
+  assert.deepEqual(columnDistribution(details, "score", s, g, minels, []), [{ label: "Noch kein Guess", count: 5 }]);
+  assert.deepEqual(columnDistribution(details, "minel", s, g, minels, scores), [
+    { label: "minel 0", count: 1 }, { label: "minel 2", count: 2 },
+    { label: "Noch nicht berechnet", count: 1 }, { label: "Nicht in G", count: 1 }
+  ]);
+  assert.deepEqual(columnDistribution({ ...details, recommendedIndex: null }, "minel", s, g, new Map(), scores), [
+    { label: "Nicht in G", count: 1 }, { label: "Nicht benötigt", count: 4 }
+  ]);
+  assert.throws(() => columnDistribution(details, "idx", s, g, minels, scores));
 });
 
 test("Automatik vergleicht im Standardspiel auch Testguesses ausserhalb S und lässt das Spiel unverändert", () => {

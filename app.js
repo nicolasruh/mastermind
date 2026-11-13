@@ -496,6 +496,7 @@ byId("guess-form").addEventListener("submit", event => {
       game.submit(guess);
       breakerPendingGuess = null;
       phase = game.status === "playing" ? "guess" : "finished";
+      if (game.status === "playing") renderInputs("guess-inputs");
       renderAll();
       explorer.updateBreaker(game.history, game.status === "playing");
       byId("show-explorer").disabled = false;

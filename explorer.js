@@ -103,9 +103,9 @@
   }
 
   function sortTable(details, column, direction, s, g, minels, scores) {
-    if (!["code", "s", "g", "score", "minel"].includes(column) || !["asc", "desc"].includes(direction)) throw new Error("Diese Sortierung ist nicht verfügbar.");
+    if (!["idx", "code", "s", "g", "score", "minel"].includes(column) || !["asc", "desc"].includes(direction)) throw new Error("Diese Sortierung ist nicht verfügbar.");
     const sign = direction === "asc" ? 1 : -1;
-    const value = index => column === "code" ? index : column === "s" ? Number(s.has(index)) : column === "g" ? Number(g.has(index))
+    const value = index => column === "idx" || column === "code" ? index : column === "s" ? Number(s.has(index)) : column === "g" ? Number(g.has(index))
       : column === "minel" ? minels.get(index) : scores[index] ? scores[index].black * (details.codes[0].length + 1) + scores[index].white : undefined;
     return details.codes.map((_, index) => index).sort((a, b) => {
       const first = value(a);
@@ -113,6 +113,34 @@
       if (first === undefined || second === undefined) return Number(first === undefined) - Number(second === undefined) || a - b;
       return sign * (first - second) || (column === "minel" ? Number(s.has(b)) - Number(s.has(a)) : 0) || a - b;
     });
+  }
+
+  function columnDistribution(details, column, s, g, minels, scores) {
+    if (!["s", "g", "score", "minel"].includes(column)) throw new Error("Für diese Spalte ist keine Verteilung verfügbar.");
+    if (column === "s" || column === "g") {
+      const set = column === "s" ? s : g;
+      const name = column.toUpperCase();
+      return [{ label: `Codes in ${name}`, count: set.size }, { label: `Codes nicht in ${name}`, count: details.codes.length - set.size }];
+    }
+    const counts = new Map();
+    for (let index = 0; index < details.codes.length; index++) {
+      const key = column === "score" ? scores[index] ? `${scores[index].black},${scores[index].white}` : "missing"
+        : !g.has(index) ? "excluded" : details.recommendedIndex === null ? "unused" : minels.has(index) ? minels.get(index) : "missing";
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    const numeric = [...counts.keys()].filter(key => key !== "missing" && key !== "excluded" && key !== "unused");
+    numeric.sort(column === "score" ? (a, b) => {
+      const first = a.split(",").map(Number);
+      const second = b.split(",").map(Number);
+      return first[0] - second[0] || first[1] - second[1];
+    } : (a, b) => a - b);
+    const keys = [...numeric, ...["missing", "excluded", "unused"].filter(key => counts.has(key))];
+    return keys.map(key => ({
+      label: key === "missing" ? column === "score" ? "Noch kein Guess" : "Noch nicht berechnet"
+        : key === "excluded" ? "Nicht in G" : key === "unused" ? "Nicht benötigt"
+          : column === "score" ? `Score (${key.replace(",", ", ")})` : `minel ${key}`,
+      count: counts.get(key)
+    }));
   }
 
   function createLesson(details) {
@@ -216,6 +244,7 @@
     let timeout = null;
     let serial = 0;
     let tooltipIndex = null;
+    let distributionAnchor = null;
     const scoreText = score => `(${score.black}, ${score.white})`;
     const titles = ["Letzten Guess aus G ausschliessen", "Inkompatible Codes aus S ausschliessen", "minel für alle Testguesses aus G berechnen", "Nächsten Guess wählen"];
 
@@ -236,12 +265,18 @@
       tooltipIndex = null;
     }
 
+    function hideDistribution() {
+      byId("column-distribution").hidden = true;
+      distributionAnchor = null;
+    }
+
     function close() {
       if (byId("code-search-dialog").open) byId("code-search-dialog").close();
       panel.close();
       byId("algorithm-help").open = false;
       document.body.classList.remove("explorer-open");
       hideGroups();
+      hideDistribution();
     }
 
     function stop() {
@@ -255,6 +290,7 @@
       data = null;
       lesson = null;
       hideGroups();
+      hideDistribution();
       byId("explorer-content").hidden = true;
       byId("explorer-retry").hidden = true;
       panel.setAttribute("aria-busy", "true");
@@ -398,6 +434,7 @@
     }
 
     function renderSteps() {
+      if (distributionAnchor) showDistribution(distributionAnchor);
       const summaries = [
         !data.lastEntry ? "Kein vorheriger Guess" : lesson.removedG.size ? "Letzter Guess entfernt" : "Bereits früher entfernt",
         `${lesson.removedS.size} Codes jetzt ausgeschlossen`,
@@ -436,6 +473,7 @@
       row.dataset.index = String(index);
       row.className = lesson.s.has(index) ? "in-s" : lesson.removedS.has(index) ? "excluded-now" : "excluded-before";
       if (searchIndex === index) row.classList.add("search-hit");
+      row.append(node("td", String(index)));
       const code = node("td");
       const pegs = node("div", undefined, "peg-row");
       pegs.setAttribute("aria-label", `Code ${data.codes[index].join("")}`);
@@ -555,6 +593,46 @@
       else showGroups(cell, true);
     }
 
+    function showDistribution(anchor) {
+      if (!data || !lesson) return;
+      const content = byId("column-distribution");
+      const column = anchor.closest("th").dataset.column;
+      const groups = columnDistribution(data, column, lesson.s, lesson.g, lesson.minels, scores);
+      const total = data.codes.length;
+      const bar = node("div", undefined, "distribution-bar");
+      const legend = node("div", undefined, "distribution-legend");
+      groups.forEach((group, index) => {
+        const color = `hsl(${Math.round(index * 137.5 % 360)} 45% 60%)`;
+        const segment = node("span");
+        segment.style.width = `${group.count / total * 100}%`;
+        segment.style.background = color;
+        bar.append(segment);
+        const item = node("div", undefined, "distribution-item");
+        const swatch = node("span", undefined, "distribution-swatch");
+        swatch.style.background = color;
+        item.append(swatch, node("span", group.label), node("strong", `${group.count} · ${(group.count / total * 100).toFixed(1)} %`));
+        legend.append(item);
+      });
+      content.replaceChildren(node("strong", `Verteilung · ${total} Codes in U`), bar, legend);
+      content.hidden = false;
+      distributionAnchor = anchor;
+      const rect = anchor.getBoundingClientRect();
+      const below = document.documentElement.clientHeight - rect.bottom - 12;
+      const above = rect.top - 12;
+      const placeBelow = below >= above;
+      content.style.maxHeight = `min(60dvh, ${Math.max(0, placeBelow ? below : above)}px)`;
+      const left = Math.max(12, Math.min(rect.left, document.documentElement.clientWidth - content.offsetWidth - 12));
+      const top = placeBelow ? rect.bottom : rect.top - content.offsetHeight;
+      content.style.left = `${left}px`;
+      content.style.top = `${top}px`;
+    }
+
+    function scrollDistribution() {
+      if (!distributionAnchor) return;
+      if (distributionAnchor.matches(":focus") || distributionAnchor.matches(":hover")) showDistribution(distributionAnchor);
+      else hideDistribution();
+    }
+
     function open() {
       if (!panel.open) panel.showModal();
       document.body.classList.add("explorer-open");
@@ -579,13 +657,14 @@
     panel.addEventListener("close", () => {
       document.body.classList.remove("explorer-open");
       hideGroups();
+      hideDistribution();
     });
     panel.addEventListener("click", event => {
       if (event.target !== panel) return;
       const rect = panel.getBoundingClientRect();
       if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) close();
     });
-    panel.addEventListener("scroll", scrollGroups);
+    panel.addEventListener("scroll", () => { scrollGroups(); scrollDistribution(); });
     byId("explorer-retry").addEventListener("click", request);
     byId("automatic-step").addEventListener("click", () => {
       try {
@@ -639,17 +718,39 @@
     });
     byId("code-rows").addEventListener("focusout", hideGroups);
     byId("minel-groups").addEventListener("mouseleave", hideGroups);
-    byId("code-rows").closest(".code-table-scroll").addEventListener("scroll", scrollGroups);
+    byId("code-rows").closest(".code-table-scroll").addEventListener("scroll", () => {
+      scrollGroups();
+      scrollDistribution();
+    });
     for (const th of panel.querySelectorAll("th[data-column]")) {
+      const label = th.querySelector(".distribution-label");
+      if (label) {
+        label.addEventListener("mouseenter", () => showDistribution(label));
+        label.addEventListener("focus", () => showDistribution(label));
+        label.addEventListener("mouseleave", event => {
+          if (!label.matches(":focus") && !byId("column-distribution").contains(event.relatedTarget)) hideDistribution();
+        });
+        label.addEventListener("blur", () => {
+          if (!label.matches(":hover")) hideDistribution();
+        });
+      }
       for (const direction of ["asc", "desc"]) {
         const button = node("button", direction === "asc" ? "\u25b2" : "\u25bc");
         button.type = "button";
         button.dataset.direction = direction;
-        button.setAttribute("aria-label", `${th.dataset.column === "s" || th.dataset.column === "g" ? `in ${th.dataset.column.toUpperCase()}` : th.dataset.column === "code" ? "Code" : th.dataset.column === "score" ? "Score" : "minel"} ${direction === "asc" ? "aufsteigend" : "absteigend"} sortieren`);
-        button.addEventListener("click", () => { sortColumn = th.dataset.column; sortDirection = direction; renderList(); });
+        button.setAttribute("aria-label", `${th.dataset.column === "s" || th.dataset.column === "g" ? `in ${th.dataset.column.toUpperCase()}` : th.dataset.column === "code" ? "Code" : th.dataset.column === "idx" ? "idx" : th.dataset.column === "score" ? "Score" : "minel"} ${direction === "asc" ? "aufsteigend" : "absteigend"} sortieren`);
+        button.addEventListener("click", () => {
+          sortColumn = th.dataset.column;
+          sortDirection = direction;
+          renderList();
+          byId("code-rows").closest(".code-table-scroll").scrollTop = 0;
+        });
         th.querySelector(".sort-controls").append(button);
       }
     }
+    byId("column-distribution").addEventListener("mouseleave", () => {
+      if (distributionAnchor && !distributionAnchor.matches(":focus")) hideDistribution();
+    });
     function closeCodeSearch() {
       byId("code-search-dialog").close();
       byId("open-code-search").focus({ preventScroll: true });
@@ -705,7 +806,7 @@
     return { reset, updateBreaker, setMaker: setData, loading, fail, stop };
   }
 
-  const api = Object.freeze({ filterSet, checkSet, partitionCodes, checkWorst, checkChoice, sortIndices, sortTable, createLesson, createView });
+  const api = Object.freeze({ filterSet, checkSet, partitionCodes, checkWorst, checkChoice, sortIndices, sortTable, columnDistribution, createLesson, createView });
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.MastermindExplorer = api;
 })(typeof globalThis !== "undefined" ? globalThis : this);

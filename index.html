@@ -152,11 +152,12 @@ wähleGuess(S, G):
           <div class="code-table-scroll" tabindex="0" role="region" aria-label="Vollständige Codeliste, scrollbar">
             <table class="code-table">
               <thead><tr>
+                <th scope="col" data-column="idx">idx <span class="sort-controls"></span></th>
                 <th scope="col" data-column="code">Code <span class="sort-controls"></span><button id="open-code-search" class="code-search-trigger" type="button" aria-label="Code suchen" aria-haspopup="dialog" aria-controls="code-search-dialog" title="Code suchen"><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10" cy="10" r="7"></circle><path d="m15 15 6 6"></path></svg></button></th>
-                <th scope="col" data-column="s">in S <span class="sort-controls"></span></th>
-                <th scope="col" data-column="g">in G <span class="sort-controls"></span></th>
-                <th scope="col" data-column="score">Score zum letzten Guess <span class="sort-controls"></span></th>
-                <th scope="col" data-column="minel">minel <span class="sort-controls"></span><small>Hover / Fokus: Score-Gruppen</small></th>
+                <th scope="col" data-column="s"><button class="distribution-label" type="button" aria-describedby="column-distribution">in S</button> <span class="sort-controls"></span></th>
+                <th scope="col" data-column="g"><button class="distribution-label" type="button" aria-describedby="column-distribution">in G</button> <span class="sort-controls"></span></th>
+                <th scope="col" data-column="score"><button class="distribution-label" type="button" aria-describedby="column-distribution">Score zum letzten Guess</button> <span class="sort-controls"></span></th>
+                <th scope="col" data-column="minel"><button class="distribution-label" type="button" aria-describedby="column-distribution">minel</button> <span class="sort-controls"></span><small>Hover / Fokus auf Wert: Score-Gruppen</small></th>
               </tr></thead>
               <tbody id="code-rows"></tbody>
             </table>
@@ -165,6 +166,7 @@ wähleGuess(S, G):
         </section>
       </div>
       <div id="minel-groups" class="minel-groups" role="tooltip" hidden></div>
+      <div id="column-distribution" class="column-distribution" role="tooltip" hidden></div>
       <dialog id="code-search-dialog" class="panel code-search-dialog" aria-labelledby="code-search-title">
         <h2 id="code-search-title">Code suchen</h2>
         <form id="code-search-form" novalidate>

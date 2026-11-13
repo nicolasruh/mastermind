@@ -40,7 +40,8 @@ Anschliessend `http://127.0.0.1:8000` öffnen.
 - Für jede Position eine Farbe über die nummerierten Farbkreise wählen.
   Alternativ auf den zunächst grauen Pin in der Mitte klicken: nächster Farbwert,
   nach der letzten Farbe wieder die erste. Beide Eingaben sind auch mit der
-  Tastatur bedienbar.
+  Tastatur bedienbar. Nach einem abgegebenen Guess sind die Pins für den nächsten
+  Guess wieder leer.
 
 - Rückmeldungs-Pins stehen in einem Raster mit zwei Spalten (2×2 bei vier Pins).
 - Mensch / Codemaker startet mit verpflichtender Codeeingabe. Danach
@@ -107,8 +108,12 @@ Die hervorgehobene Tabellenlegende enthält Definitionen und aktuelle Grössen:
   Ein Code ausserhalb S kann trotzdem in G liegen.
 
 Die Übersichten zeigen die Mengen immer relativ zu U, etwa `208/1296 Codes`.
-Die Tabelle enthält immer ganz U. Jede Spalte hat eigene Auf-/Ab-Sortierknöpfe,
-die Mengen bleiben unverändert. Die Lupe im Code-Spaltenkopf öffnet die Suche;
+Die Tabelle enthält immer ganz U. Die feste Spalte `idx` nummeriert die Codes
+ab 0. Jede Spalte hat eigene Auf-/Ab-Sortierknöpfe; beim Sortieren springt die
+Tabelle nach oben und die Mengen bleiben unverändert. Hover oder Tastaturfokus
+auf den Spaltennamen von S, G, Score und minel zeigt die aktuelle Verteilung
+über ganz U, einschliesslich noch nicht berechneter oder nicht anwendbarer Werte.
+Die Lupe im Code-Spaltenkopf öffnet die Suche;
 sie springt zur gesuchten Zeile, ohne andere Codes auszublenden. Es gibt keine separate
 Toolbar, Beispielauswahl oder Seitenwechsel.
 Das Fragezeichen neben der Explorer-Überschrift zeigt den vollständigen
